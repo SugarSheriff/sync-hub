@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sync Hub — SAP B1 ↔ Wrike Integration Demo</title>
+<meta name="description" content="A live-simulated integration pipeline connecting SAP Business One and Wrike, built by Liam Hulsey.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="https://sugarsheriff.github.io/lookatme/" class="back-link">&larr; Liam Hulsey</a>
+    <span class="topbar-title">Sync Hub</span>
+    <a href="https://github.com/SugarSheriff/sync-hub" class="repo-link" target="_blank" rel="noopener">View source</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">integration engineering / live demo</p>
+    <h1>Two systems that don't speak the same language.<br>This is the interpreter.</h1>
+    <p class="hero-copy">SAP Business One tracks the sales order. Wrike tracks the fulfillment task. Neither knows the other exists. Sync Hub simulates the middleware layer that keeps them honest — polling, transforming, retrying, and logging every hop in between.</p>
+  </section>
+
+  <section class="pipeline-section">
+    <div class="pipeline-controls">
+      <button id="triggerSync" class="btn-primary">Trigger sync batch</button>
+      <button id="injectFailure" class="btn-ghost">Inject a failure</button>
+      <div class="status-pill" id="statusPill">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Idle</span>
+      </div>
+    </div>
+
+    <div class="pipeline" id="pipeline">
+      <div class="node" data-node="sap">
+        <div class="node-icon">SAP</div>
+        <div class="node-label">SAP Business One</div>
+        <div class="node-sub">Sales Order Service</div>
+      </div>
+
+      <div class="track" id="trackA"><div class="packet" id="packetA"></div></div>
+
+      <div class="node" data-node="queue">
+        <div class="node-icon">Q</div>
+        <div class="node-label">Sync Queue</div>
+        <div class="node-sub">Transform &amp; validate</div>
+      </div>
+
+      <div class="track" id="trackB"><div class="packet" id="packetB"></div></div>
+
+      <div class="node" data-node="wrike">
+        <div class="node-icon">WR</div>
+        <div class="node-label">Wrike</div>
+        <div class="node-sub">Fulfillment Task</div>
+      </div>
+    </div>
+
+    <div class="console">
+      <div class="console-header">
+        <span>sync.log</span>
+        <span id="recordCount">0 records processed</span>
+      </div>
+      <div class="console-body" id="consoleBody"></div>
+    </div>
+  </section>
+
+  <section class="stack-section">
+    <h2>How this actually gets built</h2>
+    <p class="section-sub">This page is a simulation. The repo also ships the real pieces this kind of integration needs in production.</p>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="stack-tag">C#</div>
+        <h3>Webhook receiver &amp; retry policy</h3>
+        <p>Handles inbound SAP B1 change events, applies exponential backoff on transient Wrike API failures, and dead-letters anything that fails after 3 attempts.</p>
+        <a href="src/IntegrationService.cs" target="_blank">View IntegrationService.cs &rarr;</a>
+      </div>
+      <div class="stack-card">
+        <div class="stack-tag">TypeScript</div>
+        <h3>Field mapping schema</h3>
+        <p>Typed contract between SAP B1's order fields and Wrike's custom fields, so a schema change fails a build instead of failing silently at 2am.</p>
+        <a href="src/mapping.ts" target="_blank">View mapping.ts &rarr;</a>
+      </div>
+      <div class="stack-card">
+        <div class="stack-tag">PowerShell</div>
+        <h3>Ops health check</h3>
+        <p>Scheduled task that checks queue depth, flags stuck records older than 15 minutes, and posts a summary to a Slack webhook.</p>
+        <a href="scripts/Check-SyncHealth.ps1" target="_blank">View Check-SyncHealth.ps1 &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>Built by <a href="https://www.linkedin.com/in/liam-hulsey/" target="_blank" rel="noopener">Liam Hulsey</a> — a demo, not a production system. <a href="https://github.com/SugarSheriff/sync-hub" target="_blank" rel="noopener">Source on GitHub</a></p>
+  </footer>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
